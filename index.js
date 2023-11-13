@@ -10,13 +10,15 @@ async function main() {
     // await initializeDb();
     // await addTestScore();
 
+    await updateExamScore('S001', '41', 87);
+
     // await addDuplicateTestScore();
     // await addDuplicateTeacher();
 
     // await getSingleStudentTestResults('S001');
     // await getTeacherTestResults('T001');
     // await getTeacherAverageTestResults('T001');
-    await getClassAverageTestResults();
+    // await getClassAverageTestResults();
 
     // await moveStudents(['S001', 'S002'], 'B', 'A');
 }
@@ -207,6 +209,33 @@ async function addTestScore() {
             upsert: true,
         }
     );
+}
+
+async function updateExamScore(studentId, examId, newScore) {
+    let student = await Student.updateOne(
+            { 
+                studentId: studentId,
+                "exams.examId": examId,
+            },
+            {
+                $set: {
+                    "exams.$.score": newScore,
+                }
+            },
+            { 
+                runValidators: true,
+            }
+        ).exec();
+    
+    student = await Student.findOne(
+        { 
+            studentId: studentId,
+            "exams.examId": examId,
+        },
+    ).exec();
+
+    console.log(student);
+
 }
 
 async function addDuplicateTeacher() {
