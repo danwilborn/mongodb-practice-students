@@ -16,8 +16,9 @@ async function main() {
     // await getSingleStudentTestResults('S001');
     // await getTeacherTestResults('T001');
     // await getTeacherAverageTestResults('T001');
+    await getClassAverageTestResults();
 
-    // await moveStudents(['S001', 'S002'], 'A', 'B');
+    // await moveStudents(['S001', 'S002'], 'B', 'A');
 }
 
 async function initializeDb() {
@@ -326,7 +327,33 @@ async function getTeacherAverageTestResults(teacherId) {
 }
 
 async function getClassAverageTestResults() {
+    let examScores = {};
+    const results = await Class
+        .find()
+        .populate('students')
+        .cursor()
+        .eachAsync((c) => {
+            examScores[c.name] = {}
+            c.students.forEach((student) => {
+                student.exams.forEach((exam) => {
+                    if (examScores[c.name][exam.course]) {
+                        examScores[c.name][exam.course] = [...examScores[c.name][exam.course], exam.score]
+                    } else {
+                        examScores[c.name][exam.course] = [exam.score]
+                    }
+                });
+            });
+        });
     
+    let averageExamScores = {};
+    Object.keys(examScores).forEach((c) => {
+        averageExamScores[c] = {};
+        Object.keys(examScores[c]).forEach((course) => {
+            averageExamScores[c][course] = examScores[c][course].reduce((a, b) => a + b) / examScores[c][course].length;
+        });
+    });
+
+    console.log(averageExamScores);
 }
 
 async function moveStudents(studentIds, oldClass, newClass) {
