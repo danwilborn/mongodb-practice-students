@@ -336,6 +336,17 @@ async function addDuplicateExamScore() {
     console.log(student1);
 }
 
+export const getAllStudents = async () => {
+    try {
+        const results = await Student.find().exec();
+        console.log('Success!');
+        return { 'students': results };
+    } catch (err) {
+        console.log(err);
+        return { 'Error': err };
+    }
+}
+
 export const getSingleStudentTestResults = async (studentId) => {
     const results = await Student
         .findOne({
@@ -420,47 +431,52 @@ export const getClassAverageTestResults = async () => {
     return averageExamScores;
 }
 
-async function moveStudents(studentIds, oldClass, newClass) {
-    const movedStudents = await Class.findOne(
-        { name: oldClass }
-    ).populate({
-        path: 'students',
-        match: {
-            studentId: {
-                $in: studentIds
+export const moveStudents = async (studentIds, oldClass, newClass) => {
+    try {
+        const movedStudents = await Class.findOne(
+            { name: oldClass }
+        ).populate({
+            path: 'students',
+            match: {
+                studentId: {
+                    $in: studentIds
+                }
             }
-        }
-    }).exec();
-
-    let newClassUpdate = await Class.updateOne(
-        { name: newClass }, 
-        { 
-            $addToSet: {
-                students: movedStudents.students,
-            }
-        },
-        {            
-            runValidators: true,
-            upsert: true,
         }).exec();
-    
-    let oldClassUpdate = await Class.updateOne(
-        { name: oldClass }, 
-        { 
-            $pull: {
-                students: {
-                    $in: movedStudents.students,
-                },
-            }
-        },
-        {            
-            runValidators: true,
-            upsert: true,
-        }).exec();
-    
-    newClassUpdate = await Class.findOne({ name: newClass }).populate('students').exec();
-    oldClassUpdate = await Class.findOne({ name: oldClass }).populate('students').exec();
 
-    console.log('new: ', newClassUpdate);
-    console.log('old: ', oldClassUpdate);
+        let newClassUpdate = await Class.updateOne(
+            { name: newClass }, 
+            { 
+                $addToSet: {
+                    students: movedStudents.students,
+                }
+            },
+            {            
+                runValidators: true,
+                upsert: true,
+            }).exec();
+        
+        let oldClassUpdate = await Class.updateOne(
+            { name: oldClass }, 
+            { 
+                $pull: {
+                    students: {
+                        $in: movedStudents.students,
+                    },
+                }
+            },
+            {            
+                runValidators: true,
+                upsert: true,
+            }).exec();
+        
+        newClassUpdate = await Class.findOne({ name: newClass }).populate('students').exec();
+        oldClassUpdate = await Class.findOne({ name: oldClass }).populate('students').exec();
+
+        console.log('new: ', newClassUpdate);
+        console.log('old: ', oldClassUpdate);
+    } catch (err) {
+        console.log(err);
+        return { 'Error': err };
+    }
 }

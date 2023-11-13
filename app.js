@@ -1,11 +1,13 @@
 import express from 'express';
-import { 
+import {
+    getAllStudents, 
     getSingleStudentTestResults,
     getTeacherTestResults,
     getTeacherAverageTestResults,
     getClassAverageTestResults,
     addExamScore,
-    updateExamScore
+    updateExamScore,
+    moveStudents
 } from './index.js';
 
 const app = express();
@@ -135,6 +137,29 @@ app.post('/scores/student/add', async (req, res) => {
     }
 });
 
+app.get('/students', async (req, res) => {
+    try {
+        const { method, url, headers } = req;
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+
+        const body = await getAllStudents();
+
+        let responseBody = {
+            headers,
+            method,
+            url,
+            body: body,
+        };
+
+        res.send(JSON.stringify(responseBody));
+    } catch (err) {
+        res.status(500);
+        console.error(err);
+    }
+});
+
 app.post('/scores/student/update', async (req, res) => {
     try {
         const { method, url, headers } = req;
@@ -152,6 +177,39 @@ app.post('/scores/student/update', async (req, res) => {
             body = {'Error': 'missing required field'};
         } else {
             body = await updateExamScore(studentId, examId, newScore);
+        }
+
+        let responseBody = {
+            headers,
+            method,
+            url,
+            body: body,
+        };
+
+        res.send(JSON.stringify(responseBody));
+    } catch (err) {
+        res.status(500);
+        console.error(err);
+    }
+});
+
+app.post('/students/move', async (req, res) => {
+    try {
+        const { method, url, headers } = req;
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+
+        const studentIds = req.body?.studentIds;
+        const oldClass = req.body?.oldClass;
+        const newClass = req.body?.newClass;
+
+        let body = {};
+        if (!studentIds || studentIds.length === 0 || !oldClass || !newClass) {
+            res.statusCode = 400;
+            body = {'Error': 'missing required field'};
+        } else {
+            body = await moveStudents(studentIds, oldClass, newClass);
         }
 
         let responseBody = {
