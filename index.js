@@ -89,6 +89,47 @@ async function initializeDb() {
     });
 }
 
+export const createClass = async (className, teacher) => {
+    try {
+        const newClass = await Class.create({
+            name: className,
+            teacher: teacher,
+        });
+
+        console.log('Success!');
+        return newClass;
+    } catch (err) {
+        console.log(err);
+        return { 'Error': err };
+    }
+}
+
+export const createStudent = async (className, student) => {
+    try {
+        const newStudent = await Student.create(student);
+
+        let updatedClass = await Class.updateOne(
+                { 
+                    name: className, 
+                    'students.studentId': { $ne: student.studentId }
+                },
+                {
+                    $addToSet: {
+                        students: newStudent,
+                    }
+                }
+            );
+        
+        updatedClass = await Class.findOne({ name: className }).populate('students');
+
+        console.log('Success!');
+        return updatedClass;
+    } catch (err) {
+        console.log(err);
+        return { 'Error': err };
+    }
+}
+
 async function addExamScores() {
     let student1 = await Student.updateOne(
         { 
@@ -202,6 +243,86 @@ async function addExamScores() {
                     type: 'midterm',
                     date: '2023-11-09',
                     score: 82,
+                }
+        }},
+        { 
+            runValidators: true,
+            upsert: true,
+        }
+    );
+
+    let student7 = await Student.updateOne(
+        { 
+            studentId: 'S004', 
+        },
+        { 
+            $addToSet: {
+                exams: {
+                    examId: '41',
+                    course: 'English',
+                    type: 'midterm',
+                    date: '2023-11-09',
+                    score: 75,
+                }
+        }},
+        { 
+            runValidators: true,
+            upsert: true,
+        }
+    );
+
+    let student8 = await Student.updateOne(
+        { 
+            studentId: 'S005', 
+        },
+        { 
+            $addToSet: {
+                exams: {
+                    examId: '41',
+                    course: 'English',
+                    type: 'final',
+                    date: '2023-11-09',
+                    score: 65,
+                }
+        }},
+        { 
+            runValidators: true,
+            upsert: true,
+        }
+    );
+
+    let student9 = await Student.updateOne(
+        { 
+            studentId: 'S006', 
+        },
+        { 
+            $addToSet: {
+                exams: {
+                    examId: '41',
+                    course: 'English',
+                    type: 'final',
+                    date: '2023-11-09',
+                    score: 91,
+                }
+        }},
+        { 
+            runValidators: true,
+            upsert: true,
+        }
+    );
+
+    let student10 = await Student.updateOne(
+        { 
+            studentId: 'S006', 
+        },
+        { 
+            $addToSet: {
+                exams: {
+                    examId: '42',
+                    course: 'English',
+                    type: 'final',
+                    date: '2023-11-12',
+                    score: 59,
                 }
         }},
         { 
@@ -400,6 +521,28 @@ export const getTeacherAverageTestResults = async (teacherId) => {
 
     return averageExamScores;
 }
+
+// export const getTeacherAverageTestResults2 = async (teacherId) => {
+//     const results = await Class
+//         .findOne({ 'teacher.teacherId': teacherId })
+//         .populate({ path: 'students' })
+//         .aggregate([
+//             {
+//                 "$unwind": "$exams"
+//             },
+//             {
+//                 "$group": {
+//                     "course": "$course",
+//                     "average": {
+//                         "$avg": "$exams.score"
+//                     }
+//                 }
+//             }
+//         ])
+//         .exec();
+
+//     console.log(results);
+// }
 
 export const getClassAverageTestResults = async () => {
     let examScores = {};

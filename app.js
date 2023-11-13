@@ -7,7 +7,9 @@ import {
     getClassAverageTestResults,
     addExamScore,
     updateExamScore,
-    moveStudents
+    moveStudents,
+    createClass,
+    createStudent
 } from './index.js';
 
 const app = express();
@@ -210,6 +212,70 @@ app.post('/students/move', async (req, res) => {
             body = {'Error': 'missing required field'};
         } else {
             body = await moveStudents(studentIds, oldClass, newClass);
+        }
+
+        let responseBody = {
+            headers,
+            method,
+            url,
+            body: body,
+        };
+
+        res.send(JSON.stringify(responseBody));
+    } catch (err) {
+        res.status(500);
+        console.error(err);
+    }
+});
+
+app.post('/class/create', async (req, res) => {
+    try {
+        const { method, url, headers } = req;
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+
+        const className = req.body?.name;
+        const teacher = req.body?.teacher;
+
+        let body = {};
+        if (!className || !teacher) {
+            res.statusCode = 400;
+            body = {'Error': 'missing required field'};
+        } else {
+            body = await createClass(className, teacher);
+        }
+
+        let responseBody = {
+            headers,
+            method,
+            url,
+            body: body,
+        };
+
+        res.send(JSON.stringify(responseBody));
+    } catch (err) {
+        res.status(500);
+        console.error(err);
+    }
+});
+
+app.post('/student/create', async (req, res) => {
+    try {
+        const { method, url, headers } = req;
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+
+        const className = req.body?.className;
+        const student = req.body?.student;
+
+        let body = {};
+        if (!className || !student) {
+            res.statusCode = 400;
+            body = {'Error': 'missing required field'};
+        } else {
+            body = await createStudent(className, student);
         }
 
         let responseBody = {
