@@ -8,11 +8,11 @@ async function main() {
     mongoose.connect('mongodb://127.0.0.1:27017/students');
 
     // await initializeDb();
-    // await addTestScore();
+    // await addExamScore();
 
-    await updateExamScore('S001', '41', 87);
+    // await updateExamScore('S001', '41', 87);
 
-    // await addDuplicateTestScore();
+    // await addDuplicateExamScore();
     // await addDuplicateTeacher();
 
     // await getSingleStudentTestResults('S001');
@@ -89,7 +89,7 @@ async function initializeDb() {
     });
 }
 
-async function addTestScore() {
+async function addExamScore() {
     let student1 = await Student.updateOne(
         { 
             'studentId': 'S001', 
@@ -272,7 +272,7 @@ async function addDuplicateTeacher() {
     });
 }
 
-async function addDuplicateTestScore() {
+async function addDuplicateExamScore() {
     const newExam = {
         examId: '40',
         course: 'Math',
@@ -304,29 +304,32 @@ async function addDuplicateTestScore() {
     console.log(student1);
 }
 
-async function getSingleStudentTestResults(studentId) {
+export const getSingleStudentTestResults = async (studentId) => {
     const results = await Student
-        .find({
+        .findOne({
             studentId: studentId,
         })
-        .select('exams')
         .exec();
 
-    console.log(results[0].exams);
+    return results;
 }
 
-async function getTeacherTestResults(teacherId) {
+export const getTeacherTestResults = async (teacherId) => {
     const results = await Class
         .findOne({ 'teacher.teacherId': teacherId })
         .populate({ path: 'students' })
         .exec();
 
+    let output = {};
     results.students.forEach((s) => {
-        console.log(s.studentId, s.exams);
+        const key = s.firstName + " " + s.lastName;
+        output[key] = s.exams;
     });
+
+    return output;
 }
 
-async function getTeacherAverageTestResults(teacherId) {
+export const getTeacherAverageTestResults = async (teacherId) => {
     const results = await Class
         .findOne({ 'teacher.teacherId': teacherId })
         .populate({ path: 'students' })
@@ -352,10 +355,10 @@ async function getTeacherAverageTestResults(teacherId) {
         });
     });
 
-    console.log(averageExamScores);
+    return averageExamScores;
 }
 
-async function getClassAverageTestResults() {
+export const getClassAverageTestResults = async () => {
     let examScores = {};
     const results = await Class
         .find()
@@ -382,7 +385,7 @@ async function getClassAverageTestResults() {
         });
     });
 
-    console.log(averageExamScores);
+    return averageExamScores;
 }
 
 async function moveStudents(studentIds, oldClass, newClass) {
