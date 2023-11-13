@@ -243,31 +243,31 @@ export const addExamScore = async (studentId, exam) => {
     }
 }
 
-async function updateExamScore(studentId, examId, newScore) {
-    let student = await Student.updateOne(
-            { 
-                studentId: studentId,
-                "exams.examId": examId,
-            },
-            {
-                $set: {
-                    "exams.$.score": newScore,
+export const updateExamScore = async (studentId, examId, newScore) => {
+    try {
+        let student = await Student.updateOne(
+                { 
+                    studentId: studentId,
+                    "exams.examId": examId,
+                },
+                {
+                    $set: {
+                        "exams.$.score": newScore,
+                    }
+                },
+                { 
+                    runValidators: true,
                 }
-            },
-            { 
-                runValidators: true,
-            }
-        ).exec();
-    
-    student = await Student.findOne(
-        { 
-            studentId: studentId,
-            "exams.examId": examId,
-        },
-    ).exec();
+            ).exec();
+        
+        console.log('Success!');
 
-    console.log(student);
-
+        student = await Student.findOne({ 'studentId': studentId }).exec();
+        return { 'updatedStudent': student };
+    } catch (err) {
+        console.log(err);
+        return { 'Error': err };
+    }
 }
 
 async function addDuplicateTeacher() {

@@ -4,7 +4,8 @@ import {
     getTeacherTestResults,
     getTeacherAverageTestResults,
     getClassAverageTestResults,
-    addExamScore
+    addExamScore,
+    updateExamScore
 } from './index.js';
 
 const app = express();
@@ -118,6 +119,39 @@ app.post('/scores/student/add', async (req, res) => {
             body = {'Error': 'missing required field'};
         } else {
             body = await addExamScore(studentId, exam);
+        }
+
+        let responseBody = {
+            headers,
+            method,
+            url,
+            body: body,
+        };
+
+        res.send(JSON.stringify(responseBody));
+    } catch (err) {
+        res.status(500);
+        console.error(err);
+    }
+});
+
+app.post('/scores/student/update', async (req, res) => {
+    try {
+        const { method, url, headers } = req;
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+
+        const studentId = req.body?.studentId;
+        const examId = req.body?.examId;
+        const newScore = req.body?.newScore;
+
+        let body = {};
+        if (!examId || !studentId || newScore == null) {
+            res.statusCode = 400;
+            body = {'Error': 'missing required field'};
+        } else {
+            body = await updateExamScore(studentId, examId, newScore);
         }
 
         let responseBody = {
