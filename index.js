@@ -8,7 +8,7 @@ async function main() {
     mongoose.connect('mongodb://127.0.0.1:27017/students');
 
     // await initializeDb();
-    // await addExamScore();
+    // await addExamScores();
 
     // await updateExamScore('S001', '41', 87);
 
@@ -89,7 +89,7 @@ async function initializeDb() {
     });
 }
 
-async function addExamScore() {
+async function addExamScores() {
     let student1 = await Student.updateOne(
         { 
             'studentId': 'S001', 
@@ -209,6 +209,38 @@ async function addExamScore() {
             upsert: true,
         }
     );
+}
+
+export const addExamScore = async (studentId, exam) => {
+    try {
+        let student = await Student.updateOne(
+            { 
+                'studentId': studentId, 
+                'exams.examId': { $ne: exam.examId }
+            },
+            { 
+                $addToSet: {
+                    exams: {
+                        examId: exam.examId,
+                        course: exam.course,
+                        type: exam.type,
+                        date: exam.date,
+                        score: exam.score,
+                    }
+            }},
+            { 
+                runValidators: true,
+                upsert: true,
+            }
+        ).exec();
+        console.log('Success!');
+
+        student = await Student.findOne({ 'studentId': studentId }).exec();
+        return { 'updatedStudent': student };
+    } catch (err) {
+        console.log(err);
+        return { 'Error': err };
+    }
 }
 
 async function updateExamScore(studentId, examId, newScore) {
